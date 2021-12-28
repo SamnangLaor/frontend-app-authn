@@ -81,6 +81,8 @@ class RegistrationPage extends React.Component {
       optimizelyExperimentName: '', // eslint-disable-line react/no-unused-state
       readOnly: true,
       validatePassword: false,
+      // TODO: Remove after VAN-704 is complete
+      registerRenameExpVariation: '',
     };
   }
 
@@ -93,6 +95,10 @@ class RegistrationPage extends React.Component {
     });
 
     const payload = { ...this.queryParams };
+
+    if (payload.save_for_later === 'true') {
+      sendTrackEvent('edx.bi.user.save.course.enroll.clicked', { category: 'save-for-later' });
+    }
 
     if (this.tpaHint) {
       payload.tpa_hint = this.tpaHint;
@@ -167,11 +173,15 @@ class RegistrationPage extends React.Component {
   }
 
   getExperiments = () => {
-    const { experimentName } = window;
+    const { experimentName, renameRegisterExperiment } = window;
 
     if (experimentName) {
       // eslint-disable-next-line react/no-unused-state
       this.setState({ optimizelyExperimentName: experimentName });
+    }
+
+    if (renameRegisterExperiment) {
+      this.setState({ registerRenameExpVariation: renameRegisterExperiment });
     }
   };
 
@@ -204,7 +214,7 @@ class RegistrationPage extends React.Component {
       is_authn_mfe: true,
     };
 
-    if (getConfig().MARKETING_EMAILS_OPT_IN === 'true' && this.state.optimizelyExperimentName === 'marketing_opt_in') {
+    if (getConfig().MARKETING_EMAILS_OPT_IN) {
       payload.marketing_emails_opt_in = this.state.marketingOptIn;
     }
 
@@ -319,12 +329,6 @@ class RegistrationPage extends React.Component {
       username: '',
     });
     this.props.clearUsernameSuggestions();
-    // Fire optimizely events
-    window.optimizely = window.optimizely || [];
-    window.optimizely.push({
-      type: 'event',
-      eventName: 'authn-register-reject-username-suggestions-using-fullname',
-    });
   }
 
   isFormValid(validations) {
@@ -401,14 +405,9 @@ class RegistrationPage extends React.Component {
           errors.name = '';
         }
 
-        if (!this.state.username.trim() && this.state.optimizelyExperimentName === 'suggestUsernameUsingFullname') {
+        if (!this.state.username.trim() && value) {
+          // fetch username suggestions based on the full name
           this.props.fetchRealtimeValidations(payload);
-          // Fire optimizely events
-          window.optimizely = window.optimizely || [];
-          window.optimizely.push({
-            type: 'event',
-            eventName: 'authn-register-suggest-username-using-fullname',
-          });
         }
         break;
       case 'username':
@@ -556,13 +555,6 @@ class RegistrationPage extends React.Component {
           value: this.state.totalRegistrationTime,
         },
       });
-
-      if (getConfig().MARKETING_EMAILS_OPT_IN === 'true' && this.state.optimizelyExperimentName === 'marketing_opt_in') {
-        window.optimizely.push({
-          type: 'event',
-          eventName: `marketing-emails-opt-${this.state.marketingOptIn === true ? 'in' : 'out'}`,
-        });
-      }
     }
 
     return (
@@ -660,7 +652,7 @@ class RegistrationPage extends React.Component {
               errorCode={this.state.errorCode}
               readOnly={this.state.readOnly}
             />
-            {(getConfig().MARKETING_EMAILS_OPT_IN === 'true' && this.state.optimizelyExperimentName === 'marketing_opt_in')
+            {(getConfig().MARKETING_EMAILS_OPT_IN)
             && (
               <Form.Checkbox
                 className="opt-checkbox"
@@ -712,7 +704,9 @@ class RegistrationPage extends React.Component {
               className="stateful-button-width mt-4 mb-4"
               state={submitState}
               labels={{
-                default: intl.formatMessage(messages['create.account.button']),
+                default: this.state.registerRenameExpVariation === 'variation2' ? (
+                  intl.formatMessage(messages['register.for.free.button'])
+                ) : intl.formatMessage(messages['create.account.button']),
                 pending: '',
               }}
               onClick={this.handleSubmit}

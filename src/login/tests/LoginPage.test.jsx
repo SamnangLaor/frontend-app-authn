@@ -215,8 +215,8 @@ describe('LoginPage', () => {
 
   it('should match account activation message', () => {
     const activationMessage = 'Success! You have activated your account.'
-      + 'You will now receive email updates and alerts from us related '
-      + 'to the courses you are enrolled in. Sign in to continue.';
+                              + 'You will now receive email updates and alerts from us related '
+                              + 'to the courses you are enrolled in. Sign in to continue.';
 
     delete window.location;
     window.location = { href: getConfig().BASE_URL.concat('/login'), search: '?account_activation_status=success' };
@@ -238,8 +238,9 @@ describe('LoginPage', () => {
       },
     });
 
-    const expectedMessage = 'You have successfully signed into Apple, but your Apple account does not have a '
-                            + 'linked edX account. To link your accounts, sign in now using your edX password.';
+    const expectedMessage = `${'You have successfully signed into Apple, but your Apple account does not have a '
+                            + 'linked '}${ getConfig().SITE_NAME } account. To link your accounts, sign in now using your ${
+                             getConfig().SITE_NAME } password.`;
 
     const loginPage = mount(reduxWrapper(<IntlLoginPage {...props} />));
     expect(loginPage.find('#tpa-alert').find('p').text()).toEqual(expectedMessage);

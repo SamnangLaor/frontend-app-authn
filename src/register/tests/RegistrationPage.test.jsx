@@ -271,14 +271,14 @@ describe('RegistrationPage', () => {
           ...initialState.register,
           registrationError: {
             username: [{ userMessage: 'It looks like this username is already taken' }],
-            email: [{ userMessage: 'This email is already associated with an existing or previous edX account' }],
+            email: [{ userMessage: `This email is already associated with an existing or previous ${ getConfig().SITE_NAME } account` }],
           },
         },
       });
       const registrationPage = mount(reduxWrapper(<IntlRegistrationPage {...props} />)).find('RegistrationPage');
       expect(registrationPage.prop('validationDecisions')).toEqual({
         country: '',
-        email: 'This email is already associated with an existing or previous edX account',
+        email: `This email is already associated with an existing or previous ${ getConfig().SITE_NAME } account`,
         name: '',
         password: '',
         username: 'It looks like this username is already taken',
@@ -355,8 +355,8 @@ describe('RegistrationPage', () => {
         },
       });
 
-      const expectedMessage = 'You\'ve successfully signed into Apple! We just need a little more information before '
-                              + 'you start learning with edX.';
+      const expectedMessage = `${'You\'ve successfully signed into Apple! We just need a little more information before '
+                              + 'you start learning with '}${ getConfig().SITE_NAME }.`;
 
       const registerPage = mount(reduxWrapper(<IntlRegistrationPage {...props} />));
       expect(registerPage.find('#tpa-alert').find('p').text()).toEqual(expectedMessage);
@@ -703,6 +703,14 @@ describe('RegistrationPage', () => {
       expect(analytics.sendPageEvent).toHaveBeenCalledWith('login_and_registration', 'register');
     });
 
+    it('should send track event for save_for_later param', () => {
+      delete window.location;
+      window.location = { href: getConfig().BASE_URL.concat('/register'), search: '?save_for_later=true' };
+      renderer.create(reduxWrapper(<IntlRegistrationPage {...props} />));
+      expect(analytics.sendTrackEvent).toHaveBeenCalledWith('edx.bi.user.save.course.enroll.clicked',
+        { category: 'save-for-later' });
+    });
+
     // ******** shouldComponentUpdate tests ********
 
     it('should populate form with pipeline user details', () => {
@@ -751,6 +759,19 @@ describe('RegistrationPage', () => {
       registrationPage.find('RegistrationPage').instance().shouldComponentUpdate(nextProps);
 
       expect(registrationPage.find('RegistrationPage').state('errorCode')).toEqual(INTERNAL_SERVER_ERROR);
+    });
+
+    it('should display opt-in/opt-out checkbox', () => {
+      mergeConfig({
+        MARKETING_EMAILS_OPT_IN: 'true',
+      });
+
+      const registerPage = mount(reduxWrapper(<IntlRegistrationPage {...props} />));
+      expect(registerPage.find('div.opt-checkbox').length).toEqual(1);
+
+      mergeConfig({
+        MARKETING_EMAILS_OPT_IN: '',
+      });
     });
   });
 
