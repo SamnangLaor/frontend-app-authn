@@ -54,8 +54,8 @@
     "lodash.snakecase": "4.1.1",
     "prop-types": "15.8.1",
     "query-string": "5.1.1",
-    "react": "16.14.0",
-    "react-dom": "16.14.0",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
     "react-helmet": "6.1.0",
     "react-loading-skeleton": "2.2.0",
     "react-onclickoutside": "6.12.1",
@@ -87,6 +87,6 @@
     "history": "5.2.0",
     "husky": "7.0.4",
     "jest": "27.5.1",
-    "react-test-renderer": "16.14.0"
+    "react-test-renderer": "17.0.2"
   }
 }
